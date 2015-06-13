@@ -63,8 +63,10 @@ module PoiseDashData
     end
 
     def self.update!
+      overall_start = Time.now
       projects.each do |project|
-        puts "Updating #{project}"
+        $stdout.write("Updating #{project}")
+        start = Time.now
         SERVICES.map do |service, service_impl|
           Thread.new do
             self.update_service!(project, service.to_s, service_impl)
@@ -72,7 +74,9 @@ module PoiseDashData
         end.each do |thread|
           thread.join
         end
+        puts(" (#{Time.now - start}s)")
       end
+      puts("Overall #{Time.now - overall_start}s")
     end
 
     def self.update_service!(project, service, service_impl)
@@ -83,7 +87,7 @@ module PoiseDashData
       begin
         data = service_impl.update(db, project).to_json
       rescue StandardError => ex
-        puts "Error while updating #{project} #{service}: #{ex}"
+        puts "\nError while updating #{project} #{service}: #{ex}"
         return
       end
       values = {
