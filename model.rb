@@ -25,6 +25,14 @@ require_relative './services/travis'
 
 module PoiseDashData
   class Model
+    SERVICES = {
+      codeclimate: Services::Codeclimate,
+      codecov: Services::Codecov,
+      gemnasium: Services::Gemnasium,
+      github: Services::GitHub,
+      travis: Services::Travis,
+    }
+
     def self.db
       @db ||= Sequel.connect(ENV['DATABASE_URL'])
     end
@@ -56,11 +64,14 @@ module PoiseDashData
 
     def self.update!
       projects.each do |project|
-        self.update_service!(project, 'codeclimate', Services::Codeclimate)
-        self.update_service!(project, 'codecov', Services::Codecov)
-        self.update_service!(project, 'gemnasium', Services::Gemnasium)
-        self.update_service!(project, 'github', Services::GitHub)
-        self.update_service!(project, 'travis', Services::Travis)
+        puts "Updating #{project}"
+        SERVICES.map do |service, service_impl|
+          Thread.new do
+            self.update_service!(project, service.to_s, service_impl)
+          end
+        end.each do |thread|
+          thread.join
+        end
       end
     end
 
@@ -69,8 +80,14 @@ module PoiseDashData
         name: project,
         service: service,
       }
+      begin
+        data = service_impl.update(db, project).to_json
+      rescue StandardError => ex
+        puts "Error while updating #{project} #{service}: #{ex}"
+        return
+      end
       values = {
-        data: service_impl.update(db, project).to_json,
+        data: data,
         ts: Time.now,
       }
       if db[:projects].filter(filter).update(values) == 0
