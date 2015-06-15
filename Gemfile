@@ -23,6 +23,7 @@ gem 'travis'
 gem 'sequel'
 gem 'rake'
 gem 'faraday'
+gem 'parallel'
 
 group :production do
   gem 'pg'
@@ -30,4 +31,6 @@ end
 
 group :development do
   gem 'sqlite3'
+  gem 'pry'
+  gem 'foreman'
 end

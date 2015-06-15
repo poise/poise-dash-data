@@ -15,6 +15,8 @@
 #
 
 require 'faraday'
+require 'parallel'
+require 'travis'
 
 
 module PoiseDashData
@@ -26,6 +28,17 @@ module PoiseDashData
           # Save some space/transfer.
           data['report'].delete('files')
           data['report'].delete('suggestions')
+          # Query for sparkline data.
+          data['sparkline'] = sparkline(name)
+        end
+      end
+
+      def self.sparkline(name)
+        Parallel.map(travis_builds(name), in_threads: 100) do |build|
+          commit = build.commit
+          coverage_data = conn.get(name, ref: commit.sha).body
+          coverage = coverage_data['report'] ? coverage_data['report']['coverage'] : 0
+          {id: build.id, commit: commit.sha, number: build.number, coverage: coverage}
         end
       end
 
@@ -33,6 +46,12 @@ module PoiseDashData
         @conn ||= Faraday.new(url: 'https://codecov.io/github/', headers: {'Accept' => 'application/json'}) do |conn|
           conn.response :json
           conn.adapter Faraday.default_adapter
+        end
+      end
+
+      def self.travis_builds(name)
+        ::Travis::Repository.find(name).builds(event_type: 'push').select do |build|
+          build.finished?
         end
       end
 
