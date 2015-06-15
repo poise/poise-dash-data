@@ -51,7 +51,7 @@ module PoiseDashData
 
       def self.travis_builds(name)
         ::Travis::Repository.find(name).builds(event_type: 'push').select do |build|
-          build.finished?
+          build.passed?
         end
       end
 
