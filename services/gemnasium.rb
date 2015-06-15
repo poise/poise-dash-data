@@ -21,7 +21,9 @@ module PoiseDashData
   module Services
     class Gemnasium
       def self.update(db, name)
-        conn.get("projects/#{name}/dependencies").body
+        conn.get("projects/#{name}/dependencies").body.tap do |data|
+          raise data['message'] if data && data.is_a?(Hash) && data['message']
+        end
       end
 
       def self.conn
