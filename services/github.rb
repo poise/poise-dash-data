@@ -22,10 +22,12 @@ module PoiseDashData
     class GitHub
       def self.update(db, name)
         repo = conn.get("/repos/#{name}").body
+        raise repo['message'] if repo && repo.is_a?(Hash) && repo['message']
         # Delete to save some space and because we don't care.
         repo.delete('parent')
         repo.delete('source')
         branch = conn.get("repos/#{name}/branches/#{repo['default_branch']}").body
+        raise branch['message'] if branch && branch.is_a?(Hash) && branch['message']
         {repo: repo, branch: branch}
       end
 
