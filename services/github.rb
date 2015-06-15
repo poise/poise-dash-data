@@ -30,6 +30,9 @@ module PoiseDashData
         raise branch['message'] if branch && branch.is_a?(Hash) && branch['message']
         pulls = conn.get("repos/#{name}/pulls").body
         raise pulls['message'] if pulls && pulls.is_a?(Hash) && pulls['message']
+        # More space savings!
+        pulls.delete('head')
+        pulls.delete('bash')
         {repo: repo, branch: branch, pulls: pulls}
       end
 
