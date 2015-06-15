@@ -32,9 +32,13 @@ module PoiseDashData
       end
 
       def self.conn
-        @conn ||= Faraday.new(url: 'https://api.github.com/', headers: {'Accept' => 'application/vnd.github.v3+json'}) do |conn|
-          conn.response :json
-          conn.adapter Faraday.default_adapter
+        @conn ||= begin
+          headers = {'Accept' => 'application/vnd.github.v3+json'}
+          headers['Authorization'] = "token #{ENV['GITHUB_TOKEN']}" if ENV['GITHUB_TOKEN']
+          Faraday.new(url: 'https://api.github.com/', headers: headers) do |conn|
+            conn.response :json
+            conn.adapter Faraday.default_adapter
+          end
         end
       end
 
