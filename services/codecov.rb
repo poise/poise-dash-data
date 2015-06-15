@@ -22,6 +22,7 @@ module PoiseDashData
     class Codecov
       def self.update(db, name)
         conn.get(name).body.tap do |data|
+          raise data['reason'] if data['reason']
           # Save some space/transfer.
           data['report'].delete('files')
           data['report'].delete('suggestions')
