@@ -23,3 +23,7 @@ end
 task :update do
   PoiseDashData::Model.update!
 end
+
+task :clear_all do
+  PoiseDashData::Model.db[:projects].delete
+end
