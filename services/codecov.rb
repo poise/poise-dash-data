@@ -43,7 +43,7 @@ module PoiseDashData
       end
 
       def self.conn
-        @conn ||= Faraday.new(url: 'https://codecov.io/github/', headers: {'Accept' => 'application/json'}) do |conn|
+        @conn ||= Faraday.new(url: 'https://codecov.io/api/github/') do |conn|
           conn.response :json
           conn.adapter Faraday.default_adapter
         end
